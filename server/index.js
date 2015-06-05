@@ -55,7 +55,9 @@ var server = tls.createServer(opt, function (socket) {
         port: SOCKS_PORT,
         host: SOCKS_ADDR
     });
-    socket.pipe(decipher).pipe(socksClient).pipe(cipher).pipe(socket);
+    socket.pipe(decipher).pipe(socksClient).pipe(cipher).pipe(socket).on("error", function (e) {
+        console.error(e);
+    });
 });
 
 server.listen(SERVER_PORT, SERVER_ADDR, function () {
