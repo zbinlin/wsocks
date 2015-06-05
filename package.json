@@ -1,0 +1,18 @@
+{
+  "name": "wsocks",
+  "version": "0.0.1",
+  "description": "socks5 over wss",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "client": "node ./client/index.js",
+    "server": "node ./client/index.js"
+  },
+  "keywords": [
+    "socks5",
+    "wss"
+  ],
+  "author": "zbinlin",
+  "license": "MIT"
+}

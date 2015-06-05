@@ -1,0 +1,29 @@
+{
+    "server": {
+        "server-port": 1989,
+        "server-addr": "",
+        "socks-port": 1991,
+        "socks-addr": "",
+
+        "algorithm": "RC4",
+        "password": "password",
+
+        "server-key-file": "./keys/server-key.pem",
+        "server-cert-file": "./keys/server-cert.pem",
+        "ca-cert-file": "./keys/ca-cert.pem"
+    },
+
+    "client": {
+        "remote-port": 1989,
+        "remote-addr": "",
+        "local-port": 1990,
+        "local-addr": "",
+
+        "algorithm": "RC4",
+        "password": "password",
+
+        "client-key-file": "./keys/client-key.pem",
+        "client-cert-file": "./keys/client-cert.pem",
+        "ca-cert-file": "./keys/ca-cert.pem"
+    }
+}
