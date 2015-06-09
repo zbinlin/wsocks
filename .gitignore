@@ -1,2 +1,4 @@
 keys
 config.json
+node_modules
+*.log
