@@ -46,7 +46,9 @@ var server = net.createServer(function (socket) {
     var remoteSocket = tls.connect(opt);
     socket.pipe(cipher).pipe(remoteSocket).on("error", function (e) {
         console.error(e);
-    }).pipe(decipher).pipe(socket);
+    }).pipe(decipher).pipe(socket).on("error", function (e) {
+        console.error(e);
+    });
 });
 
 server.listen(LOCAL_PORT, LOCAL_ADDR, function () {

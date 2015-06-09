@@ -1,6 +1,6 @@
 {
   "name": "wsocks",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "socks5 over wss",
   "main": "index.js",
   "scripts": {
@@ -14,5 +14,8 @@
     "wss"
   ],
   "author": "zbinlin",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "rewire": "^2.3.3"
+  }
 }
