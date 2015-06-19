@@ -1,6 +1,6 @@
 {
   "name": "wsocks",
-  "version": "0.0.8",
+  "version": "1.0.0-0",
   "description": "socks5 over wss",
   "main": "index.js",
   "scripts": {
@@ -9,10 +9,14 @@
     "client": "node ./client/index.js",
     "server": "node ./server/index.js"
   },
+  "bin": {
+    "wsocks": "./bin/wsocks"
+  },
   "keywords": [
     "socks5",
     "wss"
   ],
+  "preferGlobal": true,
   "author": "zbinlin",
   "license": "MIT",
   "devDependencies": {
