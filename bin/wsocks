@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+"use strict";
+
+var print = require("./print");
+var CLI = require("./cli");
+
+var argv = process.argv;
+
+argv = argv.slice(2);
+
+switch (argv[0]) {
+    case "client":
+        CLI("client").parse(argv.slice(1));
+        break;
+    case "server":
+        CLI("server").parse(argv.slice(1));
+        break;
+    case "-v":
+    case "--version":
+        print.version();
+        break;
+    default:
+        print.help();
+}

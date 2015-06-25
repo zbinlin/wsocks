@@ -1,61 +1,84 @@
+"use strict";
+
 var net = require("net");
 var tls = require("tls");
 var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 
-var BASE_DIR = path.resolve(__dirname, "../");
-
-try {
-    var config = require("../config.json");
-    if (!config) {
-        config = {};
+var Client = module.exports = function (config) {
+    if (!(this instanceof Client)) {
+        return new Client(config);
     }
-} catch (ex) {
-    config = {};
-}
-var serverConfig = config.server || {};
-var clientConfig = config.client || {};
+    var CIPHER = config.cipher;
+    var PASSWORD = config.password;
+    var KEY = crypto.pbkdf2Sync(PASSWORD, "wsocks-salt", 4096, 512, "sha256");
 
-var REMOTE_PORT = clientConfig["remote-port"] || 1981;
-var REMOTE_ADDR = clientConfig["remote-addr"] || null;
-var LOCAL_PORT = clientConfig["local-port"] || 3333;
-var LOCAL_ADDR = clientConfig["local-addr"] || null;
+    var opt = {
+        host: config["remote-host"],
+        port: config["remote-port"]
+    };
 
-var ALGORITHM = clientConfig.algorithm || "RC4";
-var PASSWORD = clientConfig.algorithm || "password";
+    var CA_CERT_FILE = resolve(config["ca-cert-file"]);
+    var KEY_FILE = resolve(config["key-file"]);
+    var CERT_FILE = resolve(config["cert-file"]);
 
-var CLIENT_KEY_FILE = clientConfig["client-key-file"] || path.resolve(__dirname, "../keys/client-key.pem");
-var CLIENT_CERT_FILE = clientConfig["client-cert-file"] || path.resolve(__dirname, "../keys/client-cert.pem");
-var CA_CERT_FILE = clientConfig["ca-cert-file"] || path.resolve(__dirname, "../keys/ca-cert.pem");
+    var enableTls = config.enableTls;
+    if (enableTls) {
+        try {
+            opt.ca = [fs.readFileSync(CA_CERT_FILE)];
+            opt.key = fs.readFileSync(KEY_FILE);
+            opt.cert = fs.readFileSync(CERT_FILE);
+            opt.rejectUnauthorized = true;
+        } catch (ex) {
+            console.error(ex);
+        }
+    }
+    function resolve(path) {
+        var homeDir = process.env[~process.platform.indexOf("win") ? "USERPROFILE" : "HOME"];
+        return path.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir })
+                   .replace(/\\|\//g, path.sep);
+    }
 
-var opt = {
-    key: fs.readFileSync(path.resolve(BASE_DIR, CLIENT_KEY_FILE)),
-    cert: fs.readFileSync(path.resolve(BASE_DIR, CLIENT_CERT_FILE)),
-    rejectUnauthorized: true,
-    ca: [
-        fs.readFileSync(path.resolve(BASE_DIR, CA_CERT_FILE))
-    ]
-};
-opt.port = REMOTE_PORT;
-opt.host = REMOTE_ADDR;
-
-var server = net.createServer(function (socket) {
-    var cipher = crypto.createCipher(ALGORITHM, new Buffer(PASSWORD));
-    var decipher = crypto.createDecipher(ALGORITHM, new Buffer(PASSWORD));
-    var remoteSocket = tls.connect(opt);
-    socket.pipe(cipher).pipe(remoteSocket).on("error", function (e) {
-        console.error(e);
-    }).pipe(decipher).pipe(socket).on("error", function (e) {
-        console.error(e);
+    var server = net.createServer(function (socket) {
+        var cipher = crypto.createCipher(CIPHER, KEY);
+        var decipher = crypto.createDecipher(CIPHER, KEY);
+        var remoteSocket = (enableTls ? tls : net).connect(opt);
+        socket.pipe(cipher).pipe(remoteSocket).on("error", function (e) {
+            remoteSocket.destroy();
+            socket.destroy();
+            console.error(e.message || e);
+        }).pipe(decipher).pipe(socket).on("error", function (e) {
+            console.error(e.message || e);
+        });
     });
-});
+    this.config = config;
+    this.server = server;
+};
 
-server.listen(LOCAL_PORT, LOCAL_ADDR, function () {
-    console.log("listening...");
-    console.log([LOCAL_ADDR || "0.0.0.0", LOCAL_PORT].join(":"));
-});
+Client.prototype.start = function () {
+    if (!this.server) {
+        return;
+    }
+    var config = this.config;
+    this.server.listen(config.port, config.host, function () {
+        console.log("\nstart...");
+        console.log("=============== Configure ================");
+        console.log(JSON.stringify(config, null, "    "));
+        console.log("==========================================\n");
+    }).on("error", function (e) {
+        if (e.errno === "EADDRINUSE") {
+            console.log("\n====================== Error ======================");
+            console.log("host:port");
+            console.log(" " + config.host + ":" + config.port + " 已经被使用，请使用其他地址或端口！");
+            console.log("===================================================\n");
+        }
+    });
+};
 
-server.on("error", function (e) {
-    console.error(e);
-});
+Client.prototype.stop = function () {
+    if (!this.server) {
+        return;
+    }
+    this.server.close();
+}
