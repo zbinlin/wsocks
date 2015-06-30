@@ -221,7 +221,31 @@ CLI.prototype.init = function () {
                         ]
                     }
                 ],
-                client: null
+                client: [
+                    function _setRemoteHost(value, next) {
+                        rl.question("服务器端 host: (" + config["remote-host"] + ") ", function (answer) {
+                            answer = answer.toLowerCase();
+                            answer && (config["remote-host"] = answer);
+                            next();
+                        });
+                    },
+                    function _setRemotePort(value, next) {
+                        rl.question("服务器端 port: (" + config["remote-port"] + ") ", function (answer) {
+                            if (answer.length === 0) {
+                                next();
+                                return;
+                            }
+                            answer = +answer;
+                            if (isNaN(answer)) {
+                                console.log("请输入一个有效有数字！");
+                                _setRemotePort(next);
+                            } else {
+                                config["remote-port"] = answer;
+                                next();
+                            }
+                        });
+                    }
+                ]
             },
             function _setCipher(value, next) {
                 rl.question("加密方式: (" + config["cipher"] + ") ", function (answer) {
