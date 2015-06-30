@@ -1,6 +1,6 @@
 {
   "name": "wsocks",
-  "version": "1.0.0-4",
+  "version": "1.0.0-5",
   "description": "socks5 over wss",
   "main": "index.js",
   "scripts": {

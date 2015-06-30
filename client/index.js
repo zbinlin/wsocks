@@ -23,7 +23,7 @@ var Client = module.exports = function (config) {
     var KEY_FILE = resolve(config["key-file"]);
     var CERT_FILE = resolve(config["cert-file"]);
 
-    var enableTls = config.enableTls;
+    var enableTls = config["enable-tls"];
     if (enableTls) {
         try {
             opt.ca = [fs.readFileSync(CA_CERT_FILE)];
@@ -31,12 +31,12 @@ var Client = module.exports = function (config) {
             opt.cert = fs.readFileSync(CERT_FILE);
             opt.rejectUnauthorized = true;
         } catch (ex) {
-            console.error(ex);
+            throw ex;
         }
     }
-    function resolve(path) {
+    function resolve(pathname) {
         var homeDir = process.env[~process.platform.indexOf("win") ? "USERPROFILE" : "HOME"];
-        return path.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir })
+        return pathname.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir })
                    .replace(/\\|\//g, path.sep);
     }
 

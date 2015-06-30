@@ -21,21 +21,21 @@ var Server = module.exports = function (config) {
     var KEY_FILE = resolve(config["key-file"]);
     var CERT_FILE = resolve(config["cert-file"]);
 
-    var enableTls = config.enableTls;
+    var enableTls = config["enable-tls"];
     if (enableTls) {
         try {
-            opt["ca-cert-file"] = fs.readFileSync(CA_CERT_FILE);
-            opt["key-file"] = fs.readFileSync(KEY_FILE);
-            opt["cert-file"] = fs.readFileSync(CERT_FILE);
-            opt["requestCert"] = true;
-            opt["rejectUnauthorized"] = true;
+            opt.ca = fs.readFileSync(CA_CERT_FILE);
+            opt.key = fs.readFileSync(KEY_FILE);
+            opt.cert = fs.readFileSync(CERT_FILE);
+            opt.requestCert = true;
+            opt.rejectUnauthorized = true;
         } catch (ex) {
-            console.error(ex);
+            throw ex;
         }
     }
-    function resolve(path) {
+    function resolve(pathname) {
         var homeDir = process.env[~process.platform.indexOf("win") ? "USERPROFILE" : "HOME"];
-        return path.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir })
+        return pathname.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir })
                    .replace(/\\|\//g, path.sep);
     }
 
