@@ -12,7 +12,7 @@ var Server = module.exports = function (config) {
     }
     var CIPHER = config.cipher;
     var PASSWORD = config.password;
-    var KEY = crypto.pbkdf2Sync(PASSWORD, "wsocks-salt", 4096, 512, "sha256");
+    var KEY = new Buffer(PASSWORD);
 
     var opt = {
     };
