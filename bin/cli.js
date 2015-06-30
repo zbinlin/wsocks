@@ -5,7 +5,7 @@ var path = require("path");
 var readline = require("readline");
 var child_process = require("child_process");
 
-var sequence = require("../lib/sequence");
+var sequence = require("fn-sequence");
 
 var print = require("./print");
 

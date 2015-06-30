@@ -1,4 +1,6 @@
 
+**仅测试，现不可用**
+
 ```
 Usage: wsocks [ -h | --help ]
        wsocks { -v | --version }
@@ -45,7 +47,10 @@ server: socks-host socks-port within-socks host port cipher password ca-cert-fil
 ```
 
 
-/etc/wsocks/keys/{证书}
-/etc/wsocks/config.json
-~/.wsocks/keys/{证书}
-~/.wsocks/config.json
+<del>`/etc/wsocks/keys/{证书}`</del>
+
+<del>`/etc/wsocks/config.json`</del>
+
+`~/.wsocks/keys/{证书}`
+
+`~/.wsocks/config.json`

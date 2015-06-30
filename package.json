@@ -1,6 +1,6 @@
 {
   "name": "wsocks",
-  "version": "1.0.0-1",
+  "version": "1.0.0-2",
   "description": "socks5 over wss",
   "main": "index.js",
   "scripts": {
@@ -21,5 +21,8 @@
   "license": "MIT",
   "devDependencies": {
     "rewire": "^2.3.3"
+  },
+  "dependencies": {
+    "fn-sequence": "^1.0.2"
   }
 }
