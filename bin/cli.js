@@ -20,10 +20,9 @@ function CLI(agent) {
     var homeDir = process.env[~process.platform.indexOf("win") ? "USERPROFILE" : "HOME"];
     this.configDir = path.join(homeDir, ".wsocks");
     this.configFile = path.join(this.configDir, agent + ".json");
-    this.defaultConfig = Object.freeze({
+    var defaultConfig = {
         "host": "localhost",
         "port": agent == "client" ? 1080 : 8443,
-        "withinSOCKS": true,
         "remote-host": "localhost",
         "remote-port": agent == "client" ? 8443 : 1080,
         "cipher": "RC4",
@@ -32,7 +31,9 @@ function CLI(agent) {
         "ca-cert-file": "~/.wsocks/keys/ca-cert.pem",
         "key-file": "~/.wsocks/keys/" + agent + "-key.pem",
         "cert-file": "~/.wsocks/keys/" + agent + "-cert.pem"
-    });
+    };
+    agent === "server" && (defaultConfig.withinSOCKS = true);
+    this.defaultConfig = Object.freeze(defaultConfig);
 }
 CLI.prototype.fixConfigValue = function (key, value) {
     var defaultConfig = this.defaultConfig;

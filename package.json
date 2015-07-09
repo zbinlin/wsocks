@@ -1,7 +1,7 @@
 {
   "name": "wsocks",
-  "version": "1.0.0-7",
-  "description": "socks5 over wss",
+  "version": "1.0.0-8",
+  "description": "socks5 proxy",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -14,7 +14,7 @@
   },
   "keywords": [
     "socks5",
-    "wss"
+    "proxy"
   ],
   "preferGlobal": true,
   "author": "zbinlin",

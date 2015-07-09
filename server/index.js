@@ -50,11 +50,13 @@ var Server = module.exports = function (config) {
             host: REMOTE_HOST
         });
         socket.pipe(decipher).pipe(remoteSocket).on("error", function (e) {
+            socket.destroy();
+            remoteSocket.destroy();
+            console.error("RemoteSocket:", e.message || e);
+        }).pipe(cipher).pipe(socket).on("error", function (e) {
             remoteSocket.destroy();
             socket.destroy();
-            console.error(e.message || e);
-        }).pipe(cipher).pipe(socket).on("error", function (e) {
-            console.error(e.message || e);
+            console.error("Socket:", e.message || e);
         });
     });
 

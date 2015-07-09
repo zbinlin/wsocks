@@ -45,11 +45,13 @@ var Client = module.exports = function (config) {
         var decipher = crypto.createDecipher(CIPHER, KEY);
         var remoteSocket = (enableTls ? tls : net).connect(opt);
         socket.pipe(cipher).pipe(remoteSocket).on("error", function (e) {
+            socket.destroy();
+            remoteSocket.destroy();
+            console.error("RemoteSocket:", e.message || e);
+        }).pipe(decipher).pipe(socket).on("error", function (e) {
             remoteSocket.destroy();
             socket.destroy();
-            console.error(e.message || e);
-        }).pipe(decipher).pipe(socket).on("error", function (e) {
-            console.error(e.message || e);
+            console.error("Socket:", e.message || e);
         });
     });
     this.config = config;
