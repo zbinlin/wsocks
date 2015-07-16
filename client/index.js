@@ -44,15 +44,23 @@ var Client = module.exports = function (config) {
         var cipher = crypto.createCipher(CIPHER, KEY);
         var decipher = crypto.createDecipher(CIPHER, KEY);
         var remoteSocket = (enableTls ? tls : net).connect(opt);
-        socket.pipe(cipher).pipe(remoteSocket).on("error", function (e) {
-            socket.destroy();
+
+        socket.on("error", errorCallback);
+        remoteSocket.on("error", errorCallback);
+        socket.on("close", clearup);
+        remoteSocket.on("close", clearup);
+
+        socket.pipe(cipher).pipe(remoteSocket).pipe(decipher).pipe(socket);
+
+        function errorCallback(e) {
             remoteSocket.destroy();
-            console.error("RemoteSocket:", e.message || e);
-        }).pipe(decipher).pipe(socket).on("error", function (e) {
-            remoteSocket.destroy();
             socket.destroy();
-            console.error("Socket:", e.message || e);
-        });
+            console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
+        }
+        function clearup() {
+            this.removeListener("close", clearup);
+            this.removeListener("error", errorCallback);
+        }
     });
     this.config = config;
     this.server = server;
@@ -82,5 +90,8 @@ Client.prototype.stop = function () {
     if (!this.server) {
         return;
     }
-    this.server.close();
-}
+    try { // node v0.10.*
+        this.server.close();
+    } catch (ex) {
+    }
+};

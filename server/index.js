@@ -49,15 +49,23 @@ var Server = module.exports = function (config) {
             port: REMOTE_PORT,
             host: REMOTE_HOST
         });
-        socket.pipe(decipher).pipe(remoteSocket).on("error", function (e) {
-            socket.destroy();
+
+        socket.on("error", errorCallback);
+        remoteSocket.on("error", errorCallback);
+        socket.on("close", clearup);
+        remoteSocket.on("close", clearup);
+
+        socket.pipe(decipher).pipe(remoteSocket).pipe(cipher).pipe(socket);
+
+        function errorCallback(e) {
             remoteSocket.destroy();
-            console.error("RemoteSocket:", e.message || e);
-        }).pipe(cipher).pipe(socket).on("error", function (e) {
-            remoteSocket.destroy();
             socket.destroy();
-            console.error("Socket:", e.message || e);
-        });
+            console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
+        }
+        function clearup() {
+            this.removeListener("close", clearup);
+            this.removeListener("error", errorCallback);
+        }
     });
 
     this.config = config;
@@ -115,5 +123,8 @@ Server.prototype.stop = function () {
     if (!this.server) {
         return;
     }
-    this.server.close();
+    try { // node v0.10.*
+        this.server.close();
+    } catch (ex) {
+    }
 };
