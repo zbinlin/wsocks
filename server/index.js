@@ -6,6 +6,8 @@ var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 
+var createHttpServer = require("../lib/anti-gfw").createHttpServer;
+
 var Server = module.exports = function (config) {
     if (!(this instanceof Server)) {
         return new Server(config);
@@ -55,7 +57,11 @@ var Server = module.exports = function (config) {
         socket.on("close", cleanup);
         remoteSocket.on("close", cleanup);
 
-        socket.pipe(decipher).pipe(remoteSocket).pipe(cipher).pipe(socket);
+        socket.pipe(createHttpServer())
+              .pipe(decipher)
+              .pipe(remoteSocket)
+              .pipe(cipher)
+              .pipe(socket);
 
         function errorCallback(e) {
             remoteSocket.destroy();

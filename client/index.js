@@ -6,6 +6,8 @@ var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 
+var createHttpClient = require("../lib/anti-gfw").createHttpClient;
+
 var Client = module.exports = function (config) {
     if (!(this instanceof Client)) {
         return new Client(config);
@@ -41,6 +43,11 @@ var Client = module.exports = function (config) {
     }
 
     var server = net.createServer(function (socket) {
+        // anti GFW
+        (enableTls ? tls : net).connect(opt, function () {
+            createHttpClient(this).on("error", function () {});
+        });
+
         var cipher = crypto.createCipher(CIPHER, KEY);
         var decipher = crypto.createDecipher(CIPHER, KEY);
         var remoteSocket = (enableTls ? tls : net).connect(opt);
