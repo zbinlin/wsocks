@@ -52,18 +52,19 @@ var Server = module.exports = function (config) {
 
         socket.on("error", errorCallback);
         remoteSocket.on("error", errorCallback);
-        socket.on("close", clearup);
-        remoteSocket.on("close", clearup);
+        socket.on("close", cleanup);
+        remoteSocket.on("close", cleanup);
 
         socket.pipe(decipher).pipe(remoteSocket).pipe(cipher).pipe(socket);
 
         function errorCallback(e) {
             remoteSocket.destroy();
             socket.destroy();
+
             console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
         }
-        function clearup() {
-            this.removeListener("close", clearup);
+        function cleanup() {
+            this.removeListener("close", cleanup);
             this.removeListener("error", errorCallback);
         }
     });
