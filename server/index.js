@@ -92,7 +92,7 @@ Server.prototype.start = function () {
     var that = this;
     var socks5;
     if (config.withinSOCKS) {
-        socks5 = require("../lib/socks5")({
+        socks5 = require("./socks")({
             port: config["remote-port"],
             host: config["remote-host"]
         }, function () {
@@ -101,8 +101,8 @@ Server.prototype.start = function () {
             console.log("socks5 server listing " + config["remote-host"] + ":" + config["remote-port"]);
             console.log("==========================================\n");
             listen();
-        }).on("error", function (e) {
-            if (e.errno === "EADDRINUSE") {
+        }, function (e) {
+            if (e.indexOf("EADDRINUSE") > 0) {
                 console.log("\n====================== Error ======================");
                 console.log("remote-host:remote-port");
                 console.log(" " + config["remote-host"] + ":" + config["remote-port"] + " 已经被使用，请使用其他地址或端口！");
@@ -120,6 +120,7 @@ Server.prototype.start = function () {
             console.log(JSON.stringify(config, null, "    "));
             console.log("==========================================\n");
         }).on("error", function (e) {
+            console.log(e);
             if (e.errno === "EADDRINUSE") {
                 console.log("\n====================== Error ======================");
                 console.log("host:port");
