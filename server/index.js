@@ -57,6 +57,12 @@ var Server = module.exports = function (config) {
         socket.on("close", cleanup);
         remoteSocket.on("close", cleanup);
 
+        decipher.once("unpipe", function () {
+            cipher.unpipe();
+            remoteSocket.unpipe();
+            remoteSocket.end();
+        });
+
         socket.pipe(createHttpServer())
               .pipe(decipher)
               .pipe(remoteSocket)
