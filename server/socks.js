@@ -26,19 +26,23 @@ if (!(ENV_FORK_ID in process.env)) {
         env.PORT = cfg.port;
         env.HOST = cfg.host;
         var evt = new (require("events").EventEmitter)();
+        var firstRun = true;
         (function forever() {
             var args = arguments;
             var child = fork.apply(undefined, args);
-            child.on("message", function (obj) {
-                switch (obj.code) {
-                    case 0:
-                        onConnect(obj.msg);
-                        break;
-                    case 1:
-                        onError(obj.msg);
-                        break;
-                }
-            });
+            if (firstRun) {
+                firstRun = false;
+                child.on("message", function (obj) {
+                    switch (obj.code) {
+                        case 0:
+                            onConnect(obj.msg);
+                            break;
+                        case 1:
+                            onError(obj.msg);
+                            break;
+                    }
+                });
+            }
             child.once("exit", function (code, signal) {
                 if (code !== 0) {
                     evt.removeAllListeners("close");

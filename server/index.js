@@ -5,6 +5,7 @@ var tls = require("tls");
 var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
+var stream = require("stream");
 
 var createHttpServer = require("../lib/anti-gfw").createHttpServer;
 
@@ -57,24 +58,48 @@ var Server = module.exports = function (config) {
         socket.on("close", cleanup);
         remoteSocket.on("close", cleanup);
 
-        decipher.once("unpipe", function () {
-            cipher.unpipe();
-            remoteSocket.unpipe();
-            remoteSocket.end();
-        });
+        var gfwService = createHttpServer();
 
-        socket.pipe(createHttpServer())
+        socket.pipe(gfwService)
               .pipe(decipher)
               .pipe(remoteSocket)
               .pipe(cipher)
               .pipe(socket);
 
+        /*
+         * 如果 socket 端先断开，并且 allowHalfOpen = false 时，
+         * 这里 socket 会被 readable unpipe，为了使 readable 能被消费掉，需要
+         * resume readable。
+         */
+        socket.on("unpipe", function (src) {
+            src.resume();
+        });
+        /*
+         * 如果 remoteSocket 端先断开，socket 端的数据无法被 remoteSocket 消费掉，
+         * 为了使 socket 能被消费掉，需要 resume readable。
+         */
+        remoteSocket.on("unpipe", function (src) {
+            src.resume();
+        });
+
         function errorCallback(e) {
-            remoteSocket.destroy();
-            socket.destroy();
+            var pipes = [].concat(this._readableState.pipes);
+
+            this.destroy();
+            this.unpipe();
+
+            var emptyReader = new stream.Readable();
+            emptyReader._read = function () {};
+            emptyReader.push(null);
+
+            pipes.forEach(function (dest) {
+                emptyReader.pipe(dest);
+            });
+            pipes.length = 0;
 
             console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
         }
+
         function cleanup() {
             this.removeListener("close", cleanup);
             this.removeListener("error", errorCallback);
