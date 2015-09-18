@@ -1,10 +1,10 @@
 {
   "name": "wsocks",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "socks5 proxy",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha test",
     "start": "node index.js",
     "client": "node ./client/index.js",
     "server": "node ./server/index.js"
