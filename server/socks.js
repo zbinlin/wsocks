@@ -48,12 +48,17 @@ if (!(ENV_FORK_ID in process.env)) {
                     evt.removeAllListeners("close");
                     forever.apply(undefined, args);
                 }
+                process.removeListener("eixt", onExit);
             });
             evt.on("close", function () {
                 child.send({
                     msg: "close"
                 });
             });
+            process.on("exit", onExit);
+            function onExit() {
+                child.kill();
+            }
         }).call(undefined, opts, env);
 
         return {
