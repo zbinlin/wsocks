@@ -83,10 +83,16 @@ var Server = module.exports = function (config) {
         });
 
         function errorCallback(e) {
-            var pipes = [].concat(this._readableState.pipes);
+            console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
+
+            var pipes = [].concat(this._readableState.pipes).filter(function (dest) {
+                return !!dest;
+            });
 
             this.destroy();
             this.unpipe();
+
+            if (!pipes.length) return;
 
             var emptyReader = new stream.Readable();
             emptyReader._read = function () {};
@@ -96,8 +102,6 @@ var Server = module.exports = function (config) {
                 emptyReader.pipe(dest);
             });
             pipes.length = 0;
-
-            console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
         }
 
         function cleanup() {
