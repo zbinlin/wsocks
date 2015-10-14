@@ -35,6 +35,9 @@ function CLI(agent) {
     agent === "server" && (defaultConfig.withinSOCKS = true);
     this.defaultConfig = Object.freeze(defaultConfig);
 }
+CLI.prototype.validateConfig = function (key, value) {
+    return this.defaultConfig.hasOwnProperty(key);
+};
 CLI.prototype.fixConfigValue = function (key, value) {
     var defaultConfig = this.defaultConfig;
     var defaultValue = defaultConfig[key];
@@ -62,28 +65,21 @@ CLI.prototype.start = function (argv) {
     } catch (ex) {
         console.warn(ex.message || ex);
     }
-    for (var i in defaultConfig) {
-        if (!config.hasOwnProperty(i)) {
-            config[i] = defaultConfig[i];
+    for (var key in defaultConfig) {
+        if (!config.hasOwnProperty(key)) {
+            config[key] = defaultConfig[key];
         }
     }
     var isBackground = false;
-    var arg;
-    while ((arg = argv.shift(), argv.length)) {
-        if (arg === "-b" || arg === "--background") {
+    var parsedArgv = this.parseArgv(argv);
+    for (var i = 0, len = parsedArgv.length; i < len; i++) {
+        var arg = parsedArgv[i];
+        var key = arg[0];
+        var val = arg[1];
+        if (key === "-b" || val === "--background") {
             isBackground = true;
-            continue;
-        }
-        var idx = arg.indexOf("=");
-        if (idx > 0) {
-            var key = arg.slice(0, idx);
-            var value = arg.slice(idx + 1);
-        } else {
-            var key = arg;
-            var value = null;
-        }
-        if (config.hasOwnProperty(key)) {
-            config[key] = this.fixConfigValue(key, value === null ? value = argv.shift() : value);
+        } else if (this.validateConfig(key)) {
+            config[key] = val;
         }
     }
     if (isBackground) {
@@ -344,7 +340,15 @@ CLI.prototype.set = function (key, value) {
     var agent = this.agent;
     var dir = this.configDir;
     var configFile = this.configFile;
-    value = this.fixConfigValue(key, value);
+
+    var configs = [];
+    if (arguments.length === 1 && Array.isArray(key)) {
+        configs = key.slice(0);
+    } else {
+        configs.push([key, this.fixConfigValue(key, value)]);
+    }
+
+    var that = this;
 
     fs.exists(dir, function (isExist) {
         if (isExist) {
@@ -378,7 +382,16 @@ CLI.prototype.set = function (key, value) {
             config = JSON.parse(config);
         } catch (ex) {}
 
-        config[key] = value;
+        var newConfig = [];
+        for (var i = 0, len = configs.length; i < len; i++) {
+            var item = configs[i];
+            var key = item[0];
+            var val = item[1];
+            if (that.validateConfig(key)) {
+                config[key] = val;
+                newConfig.push(item.join(" = "));
+            }
+        }
 
         fs.writeFile(configFile, JSON.stringify(config, null, "    "), function (err) {
             if (err) {
@@ -386,17 +399,36 @@ CLI.prototype.set = function (key, value) {
                 console.log(err.message || err);
                 console.log();
             } else {
-                console.log("\n设置成功！\n");
+                console.log("\n" + newConfig.join("\n") + "\n");
+                console.log("设置成功！\n");
             }
         });
     }
+};
+
+CLI.prototype.parseArgv = function (argv) {
+    argv = argv.slice();
+    var parsedArgv = [];
+    while (argv.length) {
+        var arg = argv.shift();
+        var idx = arg.indexOf("=");
+        if (idx > 0) {
+            var key = arg.slice(0, idx);
+            var val = arg.slice(idx + 1);
+        } else {
+            var key = arg;
+            var val = null;
+        }
+        parsedArgv.push([key, this.fixConfigValue(key, val === null ? val = argv.shift() : val)]);
+    }
+    return parsedArgv;
 };
 
 CLI.prototype.parse = function (argv) {
     if (isHelp(argv[1])) {
         return print.help(this.agent, argv[0]);
     }
-    switch (argv[0]) {
+    outer: switch (argv[0]) {
         case "start":
             this.start(argv.slice(1));
             break;
@@ -413,22 +445,17 @@ CLI.prototype.parse = function (argv) {
             this.get(argv[1]);
             break;
         case "set":
-            var key = argv[1], value;
-            if (key === undefined) {
-                print.help(this.agent, "set");
-                break;
+            var parsedArgv = this.parseArgv(argv.slice(1));
+            for (var i = 0, len = parsedArgv.length; i < len; i++) {
+                var arg = parsedArgv[i];
+                var key = arg[0];
+                var val = arg[1];
+                if (!key || !val) {
+                    print.help(this.agent, "set");
+                    break outer;
+                }
             }
-            if (/=/.test(key)) {
-                value = key.split("=")[1];
-                key = key.split("=")[0];
-            } else {
-                value = argv[2];
-            }
-            if (!key || !value) {
-                print.help(this.agent, "set");
-                break;
-            }
-            this.set(key, value);
+            this.set(parsedArgv);
             break;
         default:
             print.help();
