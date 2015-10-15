@@ -19,10 +19,9 @@
   "preferGlobal": true,
   "author": "zbinlin",
   "license": "MIT",
-  "devDependencies": {
-    "rewire": "^2.3.3"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "fn-sequence": "^1.0.2"
+    "fn-sequence": "^1.0.2",
+    "ip-helper": "^1.0.0"
   }
 }
