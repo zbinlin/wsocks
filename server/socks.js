@@ -45,6 +45,7 @@ if (!(ENV_FORK_ID in process.env)) {
             }
             child.once("exit", function (code, signal) {
                 if (code !== 0) {
+                    console.log("socks exit(code: %s, signal: %s), restart...", code, signal);
                     evt.removeAllListeners("close");
                     forever.apply(undefined, args);
                 }

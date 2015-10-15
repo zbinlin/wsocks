@@ -43,6 +43,9 @@ CLI.prototype.fixConfigValue = function (key, value) {
     var defaultConfig = this.defaultConfig;
     var defaultValue = defaultConfig[key];
     switch (typeof defaultValue) {
+        case typeof value:
+            return value;
+            break;
         case "string":
             return value + "";
             break;
@@ -80,7 +83,7 @@ CLI.prototype.start = function (argv) {
         if (key === "-b" || val === "--background") {
             isBackground = true;
         } else if (this.validateConfig(key)) {
-            config[key] = val;
+            config[key] = this.fixConfigValue(key, val);
         }
     }
     if (isBackground) {
@@ -471,6 +474,6 @@ module.exports = function (agent) {
     if (!agent || (agent !== "client" && agent !== "server")) {
         throw new Error();
     }
-    
+
     return new CLI(agent);
 };
