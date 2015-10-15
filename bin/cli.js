@@ -28,6 +28,7 @@ function CLI(agent) {
         "cipher": "RC4",
         "password": "password",
         "enable-tls": false,
+        "http-ping": true,
         "ca-cert-file": "~/.wsocks/keys/ca-cert.pem",
         "key-file": "~/.wsocks/keys/" + agent + "-key.pem",
         "cert-file": "~/.wsocks/keys/" + agent + "-cert.pem"
@@ -141,9 +142,9 @@ CLI.prototype.init = function () {
             });
             config = JSON.parse(config);
         } catch (ex) {}
-        for (var i in defaultConfig) {
-            if (!config.hasOwnProperty(i)) {
-                config[i] = defaultConfig[i];
+        for (var key in defaultConfig) {
+            if (!config.hasOwnProperty(key)) {
+                config[key] = defaultConfig[key];
             }
         }
 

@@ -7,7 +7,7 @@ var path = require("path");
 var crypto = require("crypto");
 var stream = require("stream");
 
-var createHttpServer = require("../lib/anti-gfw").createHttpServer;
+var createHttpPingServer = require("../lib/http-ping-service").createHttpServer;
 
 var Server = module.exports = function (config) {
     if (!(this instanceof Server)) {
@@ -58,9 +58,10 @@ var Server = module.exports = function (config) {
         socket.on("close", cleanup);
         remoteSocket.on("close", cleanup);
 
-        var gfwService = createHttpServer();
+        var pingService = config["http-ping"] ? createHttpPingServer()
+                                              : new stream.PassThrough();
 
-        socket.pipe(gfwService)
+        socket.pipe(pingService)
               .pipe(decipher)
               .pipe(remoteSocket)
               .pipe(cipher)

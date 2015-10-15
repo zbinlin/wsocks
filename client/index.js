@@ -6,7 +6,7 @@ var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 
-var createHttpClient = require("../lib/anti-gfw").createHttpClient;
+var createHttpPingClient = require("../lib/http-ping-service").createHttpClient;
 
 var Client = module.exports = function (config) {
     if (!(this instanceof Client)) {
@@ -44,9 +44,11 @@ var Client = module.exports = function (config) {
 
     var server = net.createServer(function (socket) {
         // anti GFW
-        (enableTls ? tls : net).connect(opt, function () {
-            createHttpClient(this);
-        }).on("error", function () {});
+        if (config["http-ping"]) {
+            (enableTls ? tls : net).connect(opt, function () {
+                createHttpPingClient(this);
+            }).on("error", function () {});
+        }
 
         var cipher = crypto.createCipher(CIPHER, KEY);
         var decipher = crypto.createDecipher(CIPHER, KEY);
