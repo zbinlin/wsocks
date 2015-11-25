@@ -53,7 +53,7 @@ CLI.prototype.fixConfigValue = function (key, value) {
             return +value;
             break;
         case "boolean":
-            return "true" == value.toLowerCase();
+            return "true" == (value || "true").toLowerCase();
         default:
             return value;
     }
@@ -454,8 +454,10 @@ CLI.prototype.parse = function (argv) {
                 var arg = parsedArgv[i];
                 var key = arg[0];
                 var val = arg[1];
-                if (!key || !val) {
-                    print.help(this.agent, "set");
+                if (!this.defaultConfig.hasOwnProperty(key)) {
+                    console.error();
+                    console.error("Error invalid option:", key);
+                    console.error();
                     break outer;
                 }
             }
