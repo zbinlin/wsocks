@@ -38,7 +38,7 @@ var Server = module.exports = function (config) {
     }
     function resolve(pathname) {
         var homeDir = process.env[~process.platform.indexOf("win") ? "USERPROFILE" : "HOME"];
-        return pathname.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir })
+        return pathname.replace(/^~(?:(?=\/|\\)|$)/, function () { return homeDir; })
                    .replace(/\\|\//g, path.sep);
     }
 
@@ -50,7 +50,7 @@ var Server = module.exports = function (config) {
         var decipher = crypto.createDecipher(CIPHER, KEY);
         var remoteSocket = net.connect({
             port: REMOTE_PORT,
-            host: REMOTE_HOST
+            host: REMOTE_HOST,
         });
 
         socket.on("error", errorCallback);
@@ -61,27 +61,71 @@ var Server = module.exports = function (config) {
         var pingService = config["http-ping"] ? createHttpPingServer()
                                               : new stream.PassThrough();
 
+        socket.setNoDelay(true);
         socket.pipe(pingService)
               .pipe(decipher)
-              .pipe(remoteSocket)
-              .pipe(cipher)
-              .pipe(socket);
+              .pipe(remoteSocket);
 
-        /*
-         * 如果 socket 端先断开，并且 allowHalfOpen = false 时，
-         * 这里 socket 会被 readable unpipe，为了使 readable 能被消费掉，需要
-         * resume readable。
-         */
-        socket.on("unpipe", function (src) {
-            src.resume();
+        function throttle(func, maxSize, onEnd) {
+            var buffers = [];
+            buffers.size = 0;
+            var pending = true;
+            var ended = false;
+            remoteSocket.once("end", function () {
+                ended = true;
+                remoteSocket.removeListener("end", handleData);
+            });
+            return function onData(data) {
+                buffers.push(data);
+                buffers.size += data.length;
+
+                if (buffers.size >= maxSize) {
+                    this.pause();
+                }
+
+                const next = () => {
+                    this.isPaused() && this.resume();
+                    perform(next);
+                };
+
+                if (pending === true) {
+                    pending = false;
+                    perform(next);
+                }
+            };
+            function perform(next) {
+                if (buffers.length === 0) {
+                    pending = true;
+                    ended && onEnd();
+                    return;
+                }
+                var data = Buffer.concat(buffers, buffers.size);
+                buffers.length = 0;
+                buffers.size = 0;
+                if (ended) {
+                    onEnd(data);
+                } else {
+                    process.nextTick(func, data, next);
+                }
+            }
+        }
+
+        var handleData = throttle(function (data, next) {
+            if (false === cipher.write(data)) {
+                cipher.once("drain", next);
+            } else {
+                setImmediate(next);
+            }
+        }, 64 * 1024, function onEnd(data) {
+            if (data) {
+                cipher.end(data);
+            } else {
+                cipher.end();
+            }
         });
-        /*
-         * 如果 remoteSocket 端先断开，socket 端的数据无法被 remoteSocket 消费掉，
-         * 为了使 socket 能被消费掉，需要 resume readable。
-         */
-        remoteSocket.on("unpipe", function (src) {
-            src.resume();
-        });
+        remoteSocket.on("data", handleData);
+
+        cipher.pipe(socket);
 
         function errorCallback(e) {
             console.error(this === socket ? "Socket:" : "RemoteSocket:", e.message || e);
@@ -124,7 +168,7 @@ Server.prototype.start = function () {
     if (config.withinSOCKS) {
         socks5 = require("./socks")({
             port: config["remote-port"],
-            host: config["remote-host"]
+            host: config["remote-host"],
         }, function () {
             console.log("\n启动 SOCKS5 服务...");
             console.log("==========================================");
@@ -170,5 +214,6 @@ Server.prototype.stop = function () {
     try { // node v0.10.*
         this.server.close();
     } catch (ex) {
+        // empty
     }
 };

@@ -6,7 +6,7 @@ var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 var ipHelper = require("ip-helper");
-var Transform = require("stream").Transform
+//var Transform = require("stream").Transform;
 
 const DEBUG = function () {
     console.error(new Date().toISOString(), ...arguments);
@@ -22,7 +22,7 @@ var Client = module.exports = function (config) {
 
     var opt = {
         host: config["remote-host"],
-        port: config["remote-port"]
+        port: config["remote-port"],
     };
 
     var CA_CERT_FILE = this.resolve(config["ca-cert-file"]);
@@ -111,9 +111,7 @@ var Client = module.exports = function (config) {
             src/*.pipe(dumpBefore)*/.pipe(cipher)
                .pipe(remoteSocket)
                .pipe(decipher)
-           /**
-                .pipe(dumpAfter)
-            **/
+               /*.pipe(dumpAfter)*/
                .pipe(src);
 
             function errorCallback(e) {
