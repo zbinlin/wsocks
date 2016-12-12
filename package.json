@@ -22,6 +22,6 @@
   "devDependencies": {},
   "dependencies": {
     "fn-sequence": "^1.0.2",
-    "ip-helper": "^1.0.0"
+    "ip-helper": "^2.0.0"
   }
 }
