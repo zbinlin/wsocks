@@ -18,7 +18,7 @@ var Client = module.exports = function (config) {
     }
     var CIPHER = config.cipher;
     var PASSWORD = config.password;
-    var KEY = new Buffer(PASSWORD);
+    var KEY = Buffer.from(PASSWORD);
 
     var opt = {
         host: config["remote-host"],
@@ -83,7 +83,7 @@ var Client = module.exports = function (config) {
         let remoteSocket = (enableTls ? tls : net).connect(opt);
         remoteSocket.once("connect", function () {
             remoteSocket.removeListener("error", onError);
-            let obf = new Buffer(Math.floor(Math.random() * 513));
+            let obf = Buffer.from(Math.floor(Math.random() * 513));
             for (let i = 0, len = obf.length; i < len; i++) {
                 obf[i] = Math.floor(Math.random() * 256);
             }
@@ -160,7 +160,7 @@ var Client = module.exports = function (config) {
             throw new Error("Only supports no authentication");
         }
 
-        buffer = yield new Buffer([0x05, 0x00]);
+        buffer = yield Buffer.from([0x05, 0x00]);
 
         let debug2 = DEBUG.bind("undefined", "step2");
         if (!Buffer.isBuffer(buffer)) {

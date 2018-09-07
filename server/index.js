@@ -15,7 +15,7 @@ var Server = module.exports = function (config) {
     }
     var CIPHER = config.cipher;
     var PASSWORD = config.password;
-    var KEY = new Buffer(PASSWORD);
+    var KEY = Buffer.from(PASSWORD);
 
     var opt = {
     };
