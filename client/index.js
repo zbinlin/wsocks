@@ -83,7 +83,7 @@ var Client = module.exports = function (config) {
         let remoteSocket = (enableTls ? tls : net).connect(opt);
         remoteSocket.once("connect", function () {
             remoteSocket.removeListener("error", onError);
-            let obf = Buffer.from(Math.floor(Math.random() * 513));
+            let obf = Buffer.alloc(Math.floor(Math.random() * 513));
             for (let i = 0, len = obf.length; i < len; i++) {
                 obf[i] = Math.floor(Math.random() * 256);
             }
